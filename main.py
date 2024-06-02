@@ -51,10 +51,12 @@ while game_running:
                             text_type = font.render(selected_option, True,  color["text"])
                             textRecttype = text_type.get_rect()
                             textRecttype.center = (1200 // 2, 50)
-                            if selected_option == "Linear gray level transformation":
+                            if selected_option == transformation[0]:
                                 imp2 = LinearGrayLevel.LinearGrayLevelImage(imp,mode, size, data)
+                            elif selected_option == transformation[1]:
+                                imp2 = LinearGrayLevel.blue(imp)
                             else:
-                                imp2 = LinearGrayLevel.scale(imp,mode, size, data)
+                                imp2 = LinearGrayLevel.mask(imp)
                             break
                 else:
                     if pygame.Rect(DROPDOWN_POS_X, DROPDOWN_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT).collidepoint(mouse_pos):

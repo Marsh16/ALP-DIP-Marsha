@@ -1,89 +1,66 @@
-import pygame
-import sys
-from Model.LinearGrayLevel import LinearGrayLevel
-import numpy as np
-from pygame.locals import *
-from constants import DROPDOWN_POS_X, DROPDOWN_POS_Y, BUTTON_WIDTH,BUTTON_HEIGHT,OPTION_HEIGHT, clock, screen
-from color import color
-from dropdown import draw_dropdown
-from PIL import Image
+# Import library
+from Transformation import Transformation
+import tkinter as tk
+from tkinter import *
+from PIL import Image, ImageTk
+from tkinter import filedialog
+import os
 
-pygame.init()
+# Ukuran window, class tranformasi dan lain lain
+window = Tk()
+transform = Transformation()
+window.title("Pictures transformer")
+window.geometry("900x600+100+100")
+window.configure(bg="#e2f9b8")
 
+# Inisialisasi variable untuk dropdown
 transformation = ["Linear gray level transformation", "Piece-wise gray level transformation", "Logarithmic transformation", "Gamma transformation", "Global histogram equalization (GHE)", "Adaptive histogram equalization (AHE)", "CLAHE", "Single-scale Retinex (SSR)"]
-selected_option = "Linear gray level transformation"
-show_options = False
-pygame.display.set_caption('ALP DIP Marsha')
-font = pygame.font.Font('freesansbold.ttf', 32)
-input_font = pygame.font.Font('freesansbold.ttf', 26)
-user_text = ""
-text_surface = input_font.render(user_text,True, color["dropdown_text"])
-textRect = text_surface.get_rect()
-textRect.center = (1200 // 2, 50)
-input_rect = pygame.Rect(DROPDOWN_POS_X,DROPDOWN_POS_Y*5,BUTTON_WIDTH,BUTTON_HEIGHT)
-text_type = font.render(selected_option, True,  color["text"])
-textRecttype = text_type.get_rect()
-textRecttype.center = (1200 // 2, 50)
-imp2 = pygame.image.load("/Users/marshalikorawung/Documents/Semester 6/Digital Image Processing/ALP/Lenna.png").convert()
-imp = Image.open("/Users/marshalikorawung/Documents/Semester 6/Digital Image Processing/ALP/Lenna.png") 
-mode = imp.mode 
-size = imp.size 
-data = imp.tobytes() 
+variable = StringVar(window)
+variable.set(transformation[0]) # default value
 
-# Main loop
-game_running = True
-while game_running:
-    clock.tick(60)
+# Menampilkan image picker
+def showimage():
+    global filename
+    global importedimage
+    filename = filedialog.askopenfilename(initialdir=os.getcwd(),
+                                          title="Select image file", filetypes=(("PNG file", "*.png"),
+                                                                                ("JPG file", "*.jpg"),
+                                                                                ("JPEG file", "*.jpeg"),
+                                                                                ("ALL file", "*.txt")))
+    importedimage = Image.open(filename)
+    importedimage = ImageTk.PhotoImage(importedimage)
+    lbl.configure(image=importedimage, width=380, height=320)
+    lbl.image = importedimage
 
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == MOUSEBUTTONDOWN:
-            if event.button == 1:
-                mouse_pos = pygame.mouse.get_pos()
-                if show_options:
-                    for i, option in enumerate(transformation):
-                        option_rect = pygame.Rect(DROPDOWN_POS_X, DROPDOWN_POS_Y + BUTTON_HEIGHT + i * OPTION_HEIGHT, BUTTON_WIDTH, OPTION_HEIGHT)
-                        if option_rect.collidepoint(mouse_pos):
-                            selected_option = option
-                            show_options = False
-                            text_type = font.render(selected_option, True,  color["text"])
-                            textRecttype = text_type.get_rect()
-                            textRecttype.center = (1200 // 2, 50)
-                            if selected_option == transformation[0]:
-                                imp2 = LinearGrayLevel.LinearGrayLevelImage(imp,mode, size, data)
-                            elif selected_option == transformation[1]:
-                                imp2 = LinearGrayLevel.blue(imp)
-                            else:
-                                imp2 = LinearGrayLevel.mask(imp)
-                            break
-                else:
-                    if pygame.Rect(DROPDOWN_POS_X, DROPDOWN_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT).collidepoint(mouse_pos):
-                        show_options = not show_options
-        elif event.type == KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
-                user_text = user_text[:-1]
-                text_surface = input_font.render(user_text,True, color["text"])
-                textRect = text_surface.get_rect()
-                textRect.center = (1200 // 2, 80)
-            else:
-                user_text += event. unicode
-                text_surface = input_font.render(user_text,True, color["text"])
-                textRect = text_surface.get_rect()
-                textRect.center = (1200 // 2, 80)
-    
-    screen.fill(color["white"])
-    screen.blit(text_surface, textRect)
-    screen.blit(text_type, textRecttype)
-    screen.blit(imp2, (1200 // 3, 600 // 6))
-    pygame.draw.rect(screen, color["dropdown_text"], input_rect, 2)
-    text_surface = input_font.render(user_text,True, color["text"])
-    screen.blit (text_surface, (25,DROPDOWN_POS_Y*6))
-    draw_dropdown(screen, selected_option, show_options, transformation)
+# Pilihan logic dari dropdown untuk hasil transformasi
+def transformations(var):
+        if variable.get() == transformation[0]:
+            colorimage = transform.greyLevelTransformation(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[1]:
+            colorimage = transform.greyLevelTransformation(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        else:
+            lbl.configure(image=importedimage, width=380, height=320)
+            lbl.image = importedimage
 
-    pygame.display.update()
+# Tampilan GUI
+dropdown = OptionMenu(window, variable, *transformation, command=transformations)
+dropdown.pack(pady=80,fill=BOTH, padx=300)
 
+Label(text=variable.get(), font="arial 30 bold", fg="#313715", bg="#e2f9b8").place(x=250, y=20)
 
+selectimage = Frame(width=400, height=400, bg="#939f5c")
+selectimage.place(x=280, y=120)
 
-   
+f = Frame(selectimage, bg="black", width=380, height=320)
+f.place(x=10, y=10)
+
+lbl = Label(f, bg="black")
+lbl.place(x=0, y=0)
+
+Button(selectimage, text="Select image", width=12, height=2, font="arial 14 bold", command=showimage).place(x=130, y=340)
+
+window.mainloop()

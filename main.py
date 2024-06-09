@@ -39,7 +39,31 @@ def transformations(var):
             lbl.configure(image= colorimage, width=380, height=320)
             lbl.image = colorimage
         elif variable.get() == transformation[1]:
-            colorimage = transform.greyLevelTransformation(filename)
+            colorimage = transform.pieceWiseGreyLevelTransformation(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[2]:
+            colorimage = transform.logaritmicTransformation(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[3]:
+            colorimage = transform.gammaTransformation(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[4]:
+            colorimage = transform.global_histogram_equalization(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[5]:
+            colorimage = transform.adaptive_histogram_equalization(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[6]:
+            colorimage = transform.adaptive_histogram_equalization_clahe(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[7]:
+            colorimage = transform.SSR(filename)
             lbl.configure(image= colorimage, width=380, height=320)
             lbl.image = colorimage
         else:

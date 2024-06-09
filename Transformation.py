@@ -7,18 +7,23 @@ from skimage import exposure
 
 # Logic untuk transformasi
 class Transformation():
-    def greyLevelTransformation(var ,filename, a=2.0, b=1.0):
+    def greyLevelTransformation(var ,filename, neg = False,a=1.5, b=1.0):
         img = Image.open(filename).convert("L")
+        if neg:
+            im_neg = np.array(img)
+            im_neg = 255 - im_neg
+            img = Image.fromarray(im_neg)
+        else:
         # Apply linear transformation (s = a * r + b)
-        enhancer = ImageEnhance.Brightness(img)
-        img = enhancer.enhance(a) 
-        enhancer = ImageEnhance.Contrast(img)
-        img = enhancer.enhance(1.0 + b)
+            enhancer = ImageEnhance.Brightness(img)
+            img = enhancer.enhance(a) 
+            enhancer = ImageEnhance.Contrast(img)
+            img = enhancer.enhance(1.0 + b)
         img.getextrema() 
         image = ImageTk.PhotoImage(img)        
         return image
     
-    def pieceWiseGreyLevelTransformation(var ,filename, thresholds=[0, 100, 255], output_levels =[0, 200, 255]):
+    def pieceWiseGreyLevelTransformation(var ,filename, thresholds=[0, 100, 255], output_levels =[0, 250, 255]):
         img = Image.open(filename).convert("L")
         pixels = img.load()
         width, height = img.size
@@ -36,32 +41,41 @@ class Transformation():
         image = ImageTk.PhotoImage(img)        
         return image
     
-    def logaritmicTransformation(var ,filename, c=1.0):
-        img = Image.open(filename).convert("L")
-        log_img = img.point(lambda p: c * math.log(1 + p, 2)) 
-        min_val = min(log_img.getdata())
-        max_val = max(log_img.getdata())
-        if min_val != max_val:  
-            log_img = log_img.point(lambda p: int((p - min_val) * 255 / (max_val - min_val)))
+    def logaritmicTransformation(var ,filename, c=1.0, color=True):
+        img = Image.open(filename)
+        if color:
+            im_np = np.array(img)
+            # gain*log(1 + I)
+            clahe = exposure.adjust_log(im_np,gain=c,inv=False)
+            log_img = Image.fromarray(clahe)
+        else:
+            img = img.convert("L")
+            log_img = img.point(lambda p: c * math.log(1 + p, 2)) 
+            min_val = min(log_img.getdata())
+            max_val = max(log_img.getdata())
+            if min_val != max_val:  
+                log_img = log_img.point(lambda p: int((p - min_val) * 255 / (max_val - min_val)))
         log_img.getextrema()
         image = ImageTk.PhotoImage(log_img)        
         return image
     
-    def gammaTransformation(var ,filename, gamma=0.5):
-        img = Image.open(filename).convert("L")
-        pixels = img.load()
-        width, height = img.size
-        for x in range(width):
-            for y in range(height):
-                gray_level = pixels[x, y]
-
-                # Apply gamma transformation (new_level = (gray_level / 255) ** gamma * 255)
-                new_level = int((gray_level / 255) ** gamma * 255)  # Ensure integer output
-
-                # Clamp new_level to valid grayscale range (0-255)
-                new_level = max(0, min(new_level, 255))
-
-                pixels[x, y] = new_level
+    def gammaTransformation(var ,filename, gamma=0.5, color=True):
+        img = Image.open(filename)
+        if color:
+            im_np = np.array(img)
+            clahe = exposure.adjust_gamma(im_np,gamma,1)
+            img = Image.fromarray(clahe)
+        else:
+            img = img.convert("L")
+            pixels = img.load()
+            width, height = img.size
+            for x in range(width):
+                for y in range(height):
+                    gray_level = pixels[x, y]
+                    # Apply gamma transformation (new_level = (gray_level / 255) ** gamma * 255)
+                    new_level = int((gray_level / 255) ** gamma * 255)  
+                    new_level = max(0, min(new_level, 255))
+                    pixels[x, y] = new_level
         img.getextrema() 
         image = ImageTk.PhotoImage(img)        
         return image
@@ -70,23 +84,16 @@ class Transformation():
         img = Image.open(filename).convert("L")
         pixels = img.load()
         width, height = img.size
-        # Calculate histogram (frequency of each gray level)
-        histogram = [0] * 256  # Initialize histogram with zeros
+        histogram = [0] * 256
         for x in range(width):
             for y in range(height):
                 gray_level = pixels[x, y]
                 histogram[gray_level] += 1
-
-        # Calculate cumulative distribution function (CDF)
         cdf = [0] * 256
         cdf[0] = histogram[0]
         for i in range(1, 256):
             cdf[i] = cdf[i - 1] + histogram[i]
-
-        # Normalize CDF (scale to range 0-255)
         cdf_normalized = [int(val * 255 / (width * height)) for val in cdf]
-
-        # Apply histogram equalization (map each pixel to its new gray level based on CDF)
         for x in range(width):
             for y in range(height):
                 gray_level = pixels[x, y]
@@ -107,10 +114,10 @@ class Transformation():
         eq_arr = [map[p] for p in arr_list]
         arr_back = np.reshape(np.asarray(eq_arr), array.shape)
         return arr_back
-
+    
 
     def adaptive_histogram_equalization(var, filename, rx=136, ry=185):
-        img = Image.open(filename).convert("L") # Load and convert to grayscale
+        img = Image.open(filename).convert("L") 
         im_np = np.array(img)
         v = im_np
         img_eq = np.empty((v.shape[0], v.shape[1]), dtype=np.uint8)
@@ -126,7 +133,7 @@ class Transformation():
     
 
     def adaptive_histogram_equalization_clahe(var, filename):
-        img = Image.open(filename).convert("L") # Load and convert to grayscale
+        img = Image.open(filename).convert("L") 
         im_np = np.array(img)
         clahe = exposure.equalize_adapthist(im_np,clip_limit=0.3)
         pil_image = Image.fromarray(clahe*200)

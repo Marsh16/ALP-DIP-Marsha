@@ -14,9 +14,9 @@ window.geometry("900x600+100+100")
 window.configure(bg="#e2f9b8")
 
 # Inisialisasi variable untuk dropdown
-transformation = ["Linear gray level transformation", "Piece-wise gray level transformation", "Logarithmic transformation", "Gamma transformation", "Global histogram equalization (GHE)", "Adaptive histogram equalization (AHE)", "CLAHE", "Single-scale Retinex (SSR)"]
+transformation = ["Linear gray level transformation", "Piece-wise gray level transformation", "Logarithmic transformation", "Gamma transformation", "Global histogram equalization (GHE)", "Adaptive histogram equalization (AHE)", "CLAHE", "Single-scale Retinex (SSR)", "Negative Linear Transformation"]
 variable = StringVar(window)
-variable.set(transformation[0]) # default value
+variable.set(transformation[0]) 
 
 # Menampilkan image picker
 def showimage():
@@ -64,6 +64,10 @@ def transformations(var):
             lbl.image = colorimage
         elif variable.get() == transformation[7]:
             colorimage = transform.SSR(filename)
+            lbl.configure(image= colorimage, width=380, height=320)
+            lbl.image = colorimage
+        elif variable.get() == transformation[8]:
+            colorimage = transform.greyLevelTransformation(filename, neg=True)
             lbl.configure(image= colorimage, width=380, height=320)
             lbl.image = colorimage
         else:

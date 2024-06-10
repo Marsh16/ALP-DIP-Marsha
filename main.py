@@ -16,7 +16,7 @@ window.configure(bg="#e2f9b8")
 # Inisialisasi variable untuk dropdown
 transformation = ["Linear gray level transformation", "Piece-wise gray level transformation", "Logarithmic transformation", "Gamma transformation", "Global histogram equalization (GHE)", "Adaptive histogram equalization (AHE)", "CLAHE", "Single-scale Retinex (SSR)", "Negative Linear Transformation"]
 variable = StringVar(window)
-variable.set(transformation[0]) 
+variable.set("ALP Marsha DIP") 
 
 # Menampilkan image picker
 def showimage():

@@ -9,17 +9,20 @@ from skimage import exposure
 class Transformation():
     def greyLevelTransformation(var ,filename, neg = False,a=1.5, b=1.0):
         img = Image.open(filename).convert("L")
+        pixels = img.load()
+        width, height = img.size
         if neg:
-            im_neg = np.array(img)
-            im_neg = 255 - im_neg
-            img = Image.fromarray(im_neg)
+            for y in range(height):
+                for x in range(width):
+                    r = pixels[x, y]
+                    s = 255 - (a * r + b)  # Invert for negative with new formula
+                    pixels[x, y] = int(s)
         else:
-        # Apply linear transformation (s = a * r + b)
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(a) 
-            enhancer = ImageEnhance.Contrast(img)
-            img = enhancer.enhance(1.0 + b)
-        img.getextrema() 
+            for y in range(height):
+                for x in range(width):
+                    r = pixels[x, y]
+                    s = a * r + b
+                    pixels[x, y] = int(s)
         image = ImageTk.PhotoImage(img)        
         return image
     
@@ -37,7 +40,6 @@ class Transformation():
                         new_level = output_levels[i - 1]
                         break 
                 pixels[x, y] = new_level
-        img.getextrema() 
         image = ImageTk.PhotoImage(img)        
         return image
     
@@ -46,7 +48,7 @@ class Transformation():
         if color:
             im_np = np.array(img)
             # gain*log(1 + I)
-            clahe = exposure.adjust_log(im_np,gain=c,inv=False)
+            clahe = exposure.adjust_log(im_np,gain=c)
             log_img = Image.fromarray(clahe)
         else:
             img = img.convert("L")
@@ -55,7 +57,6 @@ class Transformation():
             max_val = max(log_img.getdata())
             if min_val != max_val:  
                 log_img = log_img.point(lambda p: int((p - min_val) * 255 / (max_val - min_val)))
-        log_img.getextrema()
         image = ImageTk.PhotoImage(log_img)        
         return image
     
@@ -63,7 +64,8 @@ class Transformation():
         img = Image.open(filename)
         if color:
             im_np = np.array(img)
-            clahe = exposure.adjust_gamma(im_np,gamma,1)
+            # 0 = I**gamma
+            clahe = exposure.adjust_gamma(im_np,gamma)
             img = Image.fromarray(clahe)
         else:
             img = img.convert("L")
@@ -72,11 +74,11 @@ class Transformation():
             for x in range(width):
                 for y in range(height):
                     gray_level = pixels[x, y]
-                    # Apply gamma transformation (new_level = (gray_level / 255) ** gamma * 255)
+                    # Apply gamma transformation (new_level = (gray_level / 255) ** gamma * 255). gray_level / 255, normalised 0-1
                     new_level = int((gray_level / 255) ** gamma * 255)  
+                    # limit to 0-255
                     new_level = max(0, min(new_level, 255))
                     pixels[x, y] = new_level
-        img.getextrema() 
         image = ImageTk.PhotoImage(img)        
         return image
     
@@ -99,7 +101,6 @@ class Transformation():
                 gray_level = pixels[x, y]
                 new_level = cdf_normalized[gray_level]
                 pixels[x, y] = new_level
-        img.getextrema() 
         image = ImageTk.PhotoImage(img)        
         return image
     
@@ -127,7 +128,6 @@ class Transformation():
                 c = Transformation.hist_equalization(t)
                 img_eq[j:j + ry, i:i + rx] = c
         pil_image = Image.fromarray(img_eq)
-        pil_image.getextrema() 
         image = ImageTk.PhotoImage(pil_image)        
         return image
     
@@ -136,8 +136,7 @@ class Transformation():
         img = Image.open(filename).convert("L") 
         im_np = np.array(img)
         clahe = exposure.equalize_adapthist(im_np,clip_limit=0.3)
-        pil_image = Image.fromarray(clahe*200)
-        pil_image.getextrema() 
+        pil_image = Image.fromarray(clahe*255)
         image = ImageTk.PhotoImage(pil_image)        
         return image
     
@@ -169,7 +168,6 @@ class Transformation():
                                     * 255
         img_retinex = np.uint8(img_retinex)        
         enhanced_img = Image.fromarray(img_retinex)
-        enhanced_img.getextrema()
         image = ImageTk.PhotoImage(enhanced_img)        
         return image    
     
